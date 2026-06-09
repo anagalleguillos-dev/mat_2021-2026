@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Matrícula SLEP Llanquihue 2021–2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F0F4F8;color:#2D3748;min-height:100vh}
+.header{background:#1E3A5F;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+.header-title{color:#fff;font-size:17px;font-weight:700;letter-spacing:-0.02em}
+.header-sub{color:rgba(255,255,255,0.55);font-size:11px;margin-top:2px}
+.tab-bar{display:flex;gap:4px;background:rgba(255,255,255,0.12);border-radius:8px;padding:3px}
+.tab{padding:6px 18px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;color:rgba(255,255,255,0.75);background:transparent}
+.tab.active{background:rgba(255,255,255,0.95);color:#1E3A5F}
+.content{max-width:1040px;margin:0 auto;padding:20px 16px}
+.view{display:none}.view.active{display:block}
+.kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+.kpi{background:#fff;border-radius:8px;padding:14px 18px;flex:1 1 130px;border:1px solid #E2E8F0;min-width:120px}
+.kpi-label{font-size:10px;color:#718096;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.kpi-value{font-size:26px;font-weight:700;line-height:1.1}
+.kpi-sub{font-size:11px;color:#718096;margin-top:3px}
+.section{margin-bottom:24px}
+.section-title{font-size:15px;font-weight:700;color:#1E3A5F;margin-bottom:4px}
+.section-sub{font-size:11px;color:#718096;margin-bottom:10px}
+.card{background:#fff;border-radius:8px;border:1px solid #E2E8F0;padding:16px}
+.chart-wrap{position:relative;width:100%}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip{padding:4px 12px;border-radius:16px;border:2px solid;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;background:#fff}
+.legend-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#4A5568}
+.legend-dot{width:10px;height:10px;border-radius:5px;flex-shrink:0}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge.pos{background:#E8F5E9;color:#2E7D32}
+.badge.neg{background:#FFEBEE;color:#C62828}
+.badge.zero{background:#EEEEEE;color:#616161}
+/* Filters */
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.filters input,.filters select{padding:8px 11px;border-radius:6px;border:1px solid #CBD5E0;font-size:13px;background:#fff;outline:none;color:#2D3748}
+.filters input{width:210px}
+.filter-count{font-size:12px;color:#718096}
+/* Table */
+.table-wrap{overflow-x:auto;border-radius:8px;border:1px solid #E2E8F0}
+table{width:100%;border-collapse:collapse;font-size:12px;background:#fff}
+thead tr{background:#1E3A5F}
+th{padding:9px 7px;color:#fff;font-weight:600;font-size:11px;text-align:left;cursor:pointer;user-select:none;white-space:nowrap;border-bottom:2px solid #1E3A5F}
+th:hover{background:#2C5282}
+td{padding:7px;border-bottom:1px solid #EDF2F7;vertical-align:middle}
+tr:nth-child(even) td{background:#FAFAFA}
+tr.expanded td{background:#EBF8FF!important}
+tr.detail-row td{background:#EBF8FF;padding:10px 14px}
+.est-name{font-weight:600;color:#2D3748}
+.est-rbd{font-size:10px;color:#718096}
+.zona-badge{padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600}
+.zona-r{background:#FFF3E0;color:#E65100}
+.zona-u{background:#F5F5F5;color:#616161}
+.detail-years{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.detail-year{text-align:center;min-width:44px}
+.detail-year-label{font-size:10px;color:#718096}
+.detail-year-val{font-size:16px;font-weight:700}
+.detail-year-var{font-size:10px}
+.sparkline{display:block}
+.table-note{font-size:11px;color:#718096;margin-top:6px}
+/* Detail panel for comuna */
+.detail-panel{margin-top:12px;background:#F7FAFC;border-radius:8px;border:1px solid #E2E8F0;padding:14px;display:none}
+.detail-panel.active{display:block}
+.detail-panel-title{font-size:13px;font-weight:700;color:#1E3A5F;margin-bottom:10px}
+.nivel-cards{display:flex;gap:10px;flex-wrap:wrap}
+.nivel-card{background:#fff;border-radius:6px;padding:8px 14px;border:1px solid #E2E8F0;min-width:110px}
+.nivel-card-label{font-size:11px;color:#718096}
+.nivel-card-vals{font-size:14px;font-weight:700;color:#2D3748;margin:2px 0}
+</style>
+</head>
+<body>
+<div class="header">
+  <div><div class="header-title">Dashboard Matrícula SLEP Llanquihue</div><div class="header-sub">Serie 2021–2026 · Base CEM-MINEDUC · Corte abril/mayo</div></div>
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchView('territorial')">Territorial</button>
+    <button class="tab" onclick="switchView('establecimientos')">Por Establecimiento</button>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- TERRITORIAL VIEW -->
+<div id="view-territorial" class="view active">
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-label">Matrícula 2026</div><div class="kpi-value" style="color:#1E3A5F">10.885</div><div class="kpi-sub">Total SLEP Llanquihue</div></div>
+    <div class="kpi"><div class="kpi-label">Var. 2021→2026</div><div class="kpi-value" style="color:#C62828">−145</div><div class="kpi-sub">−1,3%</div></div>
+    <div class="kpi"><div class="kpi-label">Var. 2025→2026</div><div class="kpi-value" style="color:#C62828">−481</div><div class="kpi-sub">−4,2% (mayor caída)</div></div>
+    <div class="kpi"><div class="kpi-label">Peak histórico</div><div class="kpi-value" style="color:#2C5282">11.442</div><div class="kpi-sub">Año 2023</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Evolución matrícula total SLEP</div>
+    <div class="section-sub">Fuente: Base CEM-MINEDUC, corte abril/mayo de cada año</div>
+    <div class="card"><div class="chart-wrap" style="height:220px"><canvas id="chartTotal"></canvas></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Matrícula por comuna</div>
+    <div class="section-sub">Haz clic en una comuna para ver el detalle por nivel educativo</div>
+    <div class="card">
+      <div class="chart-wrap" style="height:240px"><canvas id="chartComunas"></canvas></div>
+      <div class="chips" id="comunaChips"></div>
+    </div>
+    <div class="detail-panel" id="comunaDetail">
+      <div class="detail-panel-title" id="comunaDetailTitle"></div>
+      <div class="nivel-cards" id="comunaDetailCards"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Matrícula por nivel educativo</div>
+    <div class="card">
+      <div class="chart-wrap" style="height:260px"><canvas id="chartNiveles"></canvas></div>
+      <div class="legend-row" id="nivelesLegend"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Matrícula rural vs urbano</div>
+    <div class="section-sub">Nota: RBD 7724 (Nueva Braunau) reclasificado de rural a urbano en 2023</div>
+    <div class="card">
+      <div class="chart-wrap" style="height:200px"><canvas id="chartRural"></canvas></div>
+      <div class="legend-row" style="margin-top:8px">
+        <div class="legend-item"><div class="legend-dot" style="background:#E65100"></div>Rural: 3.057 <span class="badge neg" style="margin-left:4px">−400</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2C5282"></div>Urbano: 7.828 <span class="badge pos" style="margin-left:4px">+255</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Educación Básica por grado</div>
+    <div class="section-sub">Efecto cohorte: 1° Básico 2026 es mínimo histórico (631 estudiantes)</div>
+    <div class="card"><div class="chart-wrap" style="height:240px"><canvas id="chartGradoBasica"></canvas></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Enseñanza Media HC por grado</div>
+    <div class="card"><div class="chart-wrap" style="height:200px"><canvas id="chartGradoMedia"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ESTABLECIMIENTOS VIEW -->
+<div id="view-establecimientos" class="view">
+  <div class="kpis" id="estKpis"></div>
+  <div class="filters">
+    <input type="text" id="searchInput" placeholder="Buscar por nombre o RBD..." oninput="renderTable()">
+    <select id="filterCom" onchange="renderTable()">
+      <option value="">Todas las comunas</option>
+      <option>Fresia</option><option>Frutillar</option><option>Llanquihue</option><option>Los Muermos</option><option>Puerto Varas</option>
+    </select>
+    <select id="filterZona" onchange="renderTable()">
+      <option value="">Todas las zonas</option>
+      <option value="U">Urbano</option>
+      <option value="R">Rural</option>
+    </select>
+    <span class="filter-count" id="filterCount"></span>
+  </div>
+  <div class="table-wrap">
+    <table id="estTable">
+      <thead><tr>
+        <th onclick="sortTable('nom')">Establecimiento <span id="s-nom"></span></th>
+        <th onclick="sortTable('com')" style="width:80px">Comuna <span id="s-com"></span></th>
+        <th onclick="sortTable('zona')" style="width:40px">Zona <span id="s-zona"></span></th>
+        <th onclick="sortTable('mat26')" style="width:58px">2026 <span id="s-mat26"></span></th>
+        <th style="width:90px">Tendencia</th>
+        <th onclick="sortTable('v2126')" style="width:72px">Var 21→26 <span id="s-v2126"></span></th>
+        <th onclick="sortTable('v2526')" style="width:72px">Var 25→26 <span id="s-v2526"></span></th>
+        <th style="width:55px">Peak</th>
+      </tr></thead>
+      <tbody id="estTbody"></tbody>
+    </table>
+  </div>
+  <div class="table-note">Haz clic en una fila para ver el detalle año a año. Clic en encabezado para ordenar. (*) Nueva Braunau reclasificado R→U en 2023.</div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+// ===== DATA =====
+const YEARS = [2021,2022,2023,2024,2025,2026];
+const totalData = [11030,11352,11442,11298,11366,10885];
+const comunaData = {
+  "Fresia":     [1195,1212,1211,1172,1182,1154],
+  "Frutillar":  [2706,2856,2962,2886,2884,2737],
+  "Llanquihue": [1720,1721,1678,1641,1714,1618],
+  "Los Muermos":[1876,1970,1940,1987,1946,1876],
+  "Puerto Varas":[3533,3593,3651,3612,3640,3500]
+};
+const nivelData = {
+  "Parvularia":   [948,943,966,911,855,747],
+  "Básica":       [6870,7046,7044,6837,6792,6477],
+  "Especial":     [119,121,111,117,122,127],
+  "Media HC":     [1722,1904,1991,2089,2207,2212],
+  "Media HC Adult":[140,93,110,110,120,96],
+  "Media TP":     [1231,1245,1220,1234,1270,1226]
+};
+const ruralData = {
+  "Rural":  [3457,3608,3208,3226,3242,3057],
+  "Urbano": [7573,7744,8234,8072,8124,7828]
+};
+const gradoBasica = {
+  "1°":[817,888,753,740,755,631],"2°":[731,841,923,729,743,728],
+  "3°":[840,777,879,938,753,739],"4°":[825,892,787,889,947,754],
+  "5°":[855,849,897,776,916,946],"6°":[929,880,869,904,791,913],
+  "7°":[911,982,944,918,962,835],"8°":[962,937,992,943,925,931]
+};
+const gradoMedia = {
+  "1° HC":[624,765,720,785,813,776],"2° HC":[644,646,728,695,766,742],
+  "3° HC":[239,248,293,312,316,376],"4° HC":[215,245,250,297,312,318]
+};
+const nivelComuna = {
+  "Fresia":{"Parvularia":[97,70],"Básica":[693,678],"Media HC":[261,262],"Media TP":[144,144]},
+  "Frutillar":{"Parvularia":[203,229],"Básica":[1485,1443],"Media HC":[253,311],"Media TP":[662,666]},
+  "Llanquihue":{"Parvularia":[129,73],"Básica":[1224,1066],"Media HC":[228,333],"Media TP":[139,146]},
+  "Los Muermos":{"Parvularia":[199,148],"Básica":[1134,1103],"Media HC":[434,504],"Media TP":[109,121]},
+  "Puerto Varas":{"Parvularia":[320,227],"Básica":[2334,2187],"Media HC":[546,802],"Media TP":[177,149]}
+};
+const establecimientos = [
+  {rbd:7924,nom:"Esc. Rural San Andrés",com:"Fresia",zona:"R",mat:[160,143,134,122,140,135]},
+  {rbd:7927,nom:"Esc. Rural Cau-Cau",com:"Fresia",zona:"R",mat:[2,6,5,11,6,7]},
+  {rbd:7929,nom:"Esc. Básica Agrícola Huempeleo",com:"Fresia",zona:"R",mat:[34,24,30,36,25,24]},
+  {rbd:7930,nom:"Esc. Rural Lucila Godoy Alcayaga",com:"Fresia",zona:"R",mat:[10,11,10,14,12,12]},
+  {rbd:7931,nom:"Esc. Rural Pato Llico",com:"Fresia",zona:"R",mat:[3,3,5,5,10,11]},
+  {rbd:7933,nom:"Esc. Rural Olga Soto Alvarado",com:"Fresia",zona:"R",mat:[7,11,12,10,5,6]},
+  {rbd:7936,nom:"Esc. Rural Rinconada",com:"Fresia",zona:"R",mat:[6,9,3,2,0,0]},
+  {rbd:7938,nom:"Esc. Rural Entre Ríos",com:"Fresia",zona:"R",mat:[5,5,5,6,9,8]},
+  {rbd:7939,nom:"Esc. Rural Línea Sin Nombre",com:"Fresia",zona:"R",mat:[7,8,8,6,8,4]},
+  {rbd:7940,nom:"Esc. Rural Parga",com:"Fresia",zona:"R",mat:[18,15,13,15,19,23]},
+  {rbd:7941,nom:"Liceo Carlos Ibáñez del Campo",com:"Fresia",zona:"U",mat:[405,421,446,431,433,406]},
+  {rbd:7944,nom:"Esc. Rural Santa Mónica",com:"Fresia",zona:"R",mat:[9,12,12,9,11,9]},
+  {rbd:7945,nom:"Esc. Rural El Peuchén",com:"Fresia",zona:"R",mat:[5,5,5,6,4,3]},
+  {rbd:22105,nom:"Escuela Básica Fresia",com:"Fresia",zona:"U",mat:[524,539,523,499,500,506]},
+  {rbd:7973,nom:"Liceo Industrial Chileno-Alemán",com:"Frutillar",zona:"U",mat:[554,578,589,589,581,527]},
+  {rbd:7975,nom:"Esc. Arturo Alessandri Palma",com:"Frutillar",zona:"U",mat:[311,327,369,362,358,357]},
+  {rbd:7976,nom:"Esc. Bernardo Philippi",com:"Frutillar",zona:"U",mat:[327,341,350,336,342,338]},
+  {rbd:7977,nom:"Esc. Rural Los Linares de Casma",com:"Frutillar",zona:"R",mat:[255,272,301,271,261,247]},
+  {rbd:7978,nom:"Esc. Rural Mario Pérez Navarro",com:"Frutillar",zona:"R",mat:[12,18,20,24,23,17]},
+  {rbd:7982,nom:"Esc. Rural Paraguay",com:"Frutillar",zona:"R",mat:[39,55,59,65,77,70]},
+  {rbd:7987,nom:"Esc. Carlos Springer Niklitschek",com:"Frutillar",zona:"R",mat:[15,19,17,21,21,17]},
+  {rbd:7990,nom:"Esc. Rural Colonia San Martín",com:"Frutillar",zona:"R",mat:[4,7,9,6,8,8]},
+  {rbd:11548,nom:"Escuela Claudio Matte",com:"Frutillar",zona:"R",mat:[336,353,357,362,369,336]},
+  {rbd:22022,nom:"Liceo Ignacio Carrera Pinto",com:"Frutillar",zona:"U",mat:[432,450,448,477,503,503]},
+  {rbd:22293,nom:"Esc. Especial San Agustín",com:"Frutillar",zona:"U",mat:[32,35,39,40,38,35]},
+  {rbd:22493,nom:"Esc. Vicente Pérez Rosales",com:"Frutillar",zona:"U",mat:[389,401,404,333,303,282]},
+  {rbd:7956,nom:"Liceo Bic. Politécnico Holanda",com:"Llanquihue",zona:"U",mat:[367,375,377,393,387,358]},
+  {rbd:7958,nom:"Esc. Inés Gallardo Alvarado",com:"Llanquihue",zona:"U",mat:[574,576,578,526,509,465]},
+  {rbd:7959,nom:"Esc. Básica Gabriela Mistral",com:"Llanquihue",zona:"U",mat:[518,480,429,440,519,529]},
+  {rbd:7961,nom:"Esc. Rural Los Pellines",com:"Llanquihue",zona:"R",mat:[127,143,154,163,178,163]},
+  {rbd:7962,nom:"Esc. Rural Loncotoro",com:"Llanquihue",zona:"R",mat:[57,62,57,48,44,38]},
+  {rbd:7966,nom:"Esc. Rural Línea Solar",com:"Llanquihue",zona:"R",mat:[2,4,4,5,4,2]},
+  {rbd:7967,nom:"Esc. Rural Colegual",com:"Llanquihue",zona:"R",mat:[66,72,65,55,63,58]},
+  {rbd:7968,nom:"Esc. Rural Coligual San Juan",com:"Llanquihue",zona:"R",mat:[9,9,14,11,10,5]},
+  {rbd:7872,nom:"Col. Bic. Difusión Artística Los Ulmos",com:"Los Muermos",zona:"U",mat:[380,408,363,382,379,364]},
+  {rbd:7874,nom:"Esc. Rural Cañitas",com:"Los Muermos",zona:"R",mat:[143,143,158,147,138,141]},
+  {rbd:7878,nom:"Esc. Rural Palihue",com:"Los Muermos",zona:"R",mat:[11,10,9,9,8,8]},
+  {rbd:7879,nom:"Esc. Rural Quillagua",com:"Los Muermos",zona:"R",mat:[2,2,2,4,5,0]},
+  {rbd:7881,nom:"Esc. Rural Huautrunes",com:"Los Muermos",zona:"R",mat:[13,15,16,20,24,23]},
+  {rbd:7887,nom:"Esc. Rural Caracol",com:"Los Muermos",zona:"R",mat:[8,7,9,10,12,8]},
+  {rbd:7891,nom:"Esc. Rural San Carlos",com:"Los Muermos",zona:"R",mat:[4,1,0,0,0,0]},
+  {rbd:7894,nom:"Esc. Rural Paraguay Chico El Gato",com:"Los Muermos",zona:"R",mat:[4,7,4,0,0,0]},
+  {rbd:7896,nom:"Esc. Rural Estaquilla",com:"Los Muermos",zona:"R",mat:[100,107,104,108,96,96]},
+  {rbd:7897,nom:"Esc. Rural Manuel Gatica Arriagada",com:"Los Muermos",zona:"R",mat:[53,48,52,52,51,45]},
+  {rbd:7898,nom:"Esc. Rural El Melí",com:"Los Muermos",zona:"R",mat:[170,174,173,174,178,165]},
+  {rbd:7901,nom:"Esc. Rural El Saraos",com:"Los Muermos",zona:"R",mat:[5,4,0,0,0,0]},
+  {rbd:7903,nom:"Esc. Rural El Ñady",com:"Los Muermos",zona:"R",mat:[2,0,0,0,0,0]},
+  {rbd:7904,nom:"Esc. Rural Serena Esperanza",com:"Los Muermos",zona:"R",mat:[1,0,0,0,0,0]},
+  {rbd:7905,nom:"Esc. Rural Paraguay Chico",com:"Los Muermos",zona:"R",mat:[84,75,73,73,79,76]},
+  {rbd:22012,nom:"Liceo Punta de Rieles",com:"Los Muermos",zona:"U",mat:[233,267,261,263,243,240]},
+  {rbd:22309,nom:"Col. Inglés Mabel Condemarín",com:"Los Muermos",zona:"R",mat:[647,683,698,727,717,701]},
+  {rbd:22310,nom:"Esc. Rural Yerbas Buenas",com:"Los Muermos",zona:"R",mat:[16,19,18,18,16,9]},
+  {rbd:7720,nom:"Liceo Pedro Aguirre Cerda",com:"Puerto Varas",zona:"U",mat:[519,532,583,573,585,563]},
+  {rbd:7722,nom:"Col. Rosita Novaro de Novaro",com:"Puerto Varas",zona:"U",mat:[523,538,537,550,567,516]},
+  {rbd:7723,nom:"Escuela Grupo Escolar",com:"Puerto Varas",zona:"U",mat:[584,560,597,571,564,545]},
+  {rbd:7724,nom:"Colegio Nueva Braunau*",com:"Puerto Varas",zona:"U*",mat:[458,472,439,445,481,515]},
+  {rbd:7725,nom:"Esc. Rural Colonia Río Sur",com:"Puerto Varas",zona:"R",mat:[176,167,170,170,173,172]},
+  {rbd:7726,nom:"Esc. Rural Santa María",com:"Puerto Varas",zona:"R",mat:[28,43,45,36,31,23]},
+  {rbd:7729,nom:"Esc. Rural José Werner Meixner",com:"Puerto Varas",zona:"R",mat:[15,19,21,17,18,17]},
+  {rbd:7730,nom:"Esc. Rural Reinaldo Raddatz Harrich",com:"Puerto Varas",zona:"R",mat:[15,19,22,21,16,22]},
+  {rbd:7732,nom:"Esc. Rural Janequeo",com:"Puerto Varas",zona:"R",mat:[5,11,25,26,34,35]},
+  {rbd:7738,nom:"Esc. Rural Hardy Minte Bartsch",com:"Puerto Varas",zona:"R",mat:[29,35,37,42,48,37]},
+  {rbd:7739,nom:"Esc. Rural Ella Minte de Roth",com:"Puerto Varas",zona:"R",mat:[5,3,0,0,0,0]},
+  {rbd:7740,nom:"Esc. Rural Epson de Ensenada",com:"Puerto Varas",zona:"R",mat:[190,193,204,220,208,203]},
+  {rbd:7741,nom:"Esc. Rural Ricardo Roth Schutz",com:"Puerto Varas",zona:"R",mat:[25,23,13,13,16,15]},
+  {rbd:7756,nom:"Esc. Rural Cristo Rey",com:"Puerto Varas",zona:"R",mat:[29,34,32,49,57,52]},
+  {rbd:7761,nom:"Esc. Rural Las Camelias",com:"Puerto Varas",zona:"R",mat:[17,15,13,11,5,3]},
+  {rbd:7765,nom:"Esc. Rural La Península",com:"Puerto Varas",zona:"R",mat:[14,13,11,6,5,3]},
+  {rbd:22101,nom:"Esc. Diferencial ASPADEP",com:"Puerto Varas",zona:"U",mat:[87,86,72,77,84,92]},
+  {rbd:22519,nom:"Colegio Mirador del Lago",com:"Puerto Varas",zona:"U",mat:[814,830,830,785,748,687]}
+];
+
+// ===== HELPERS =====
+const fmt = n => n.toLocaleString('es-CL');
+function badge(v) {
+  const cls = v>0?'pos':v<0?'neg':'zero';
+  return '<span class="badge '+cls+'">'+(v>0?'+':'')+fmt(v)+'</span>';
+}
+function sparkSVG(data) {
+  const w=90,h=26,pad=3;
+  const max=Math.max(...data),min=Math.min(...data),range=max-min||1;
+  const pts=data.map((v,i)=>{
+    const x=pad+(i/(data.length-1))*(w-pad*2);
+    const y=pad+((max-v)/range)*(h-pad*2);
+    return x+','+y;
+  }).join(' ');
+  const last=data[data.length-1],prev=data[data.length-2];
+  const col=last>=prev?'#2E7D32':'#C62828';
+  const lx=pad+(1)*(w-pad*2), ly=pad+((max-last)/range)*(h-pad*2);
+  return '<svg width="'+w+'" height="'+h+'" class="sparkline"><polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="'+lx+'" cy="'+ly+'" r="3" fill="'+col+'"/></svg>';
+}
+
+// ===== CHARTS =====
+const COLORS_COMUNA = ['#1E3A5F','#2E7D32','#C62828','#E65100','#6A1B9A'];
+const COLORS_NIVEL = ['#E65100','#1E3A5F','#7B1FA2','#2E7D32','#78909C','#C62828'];
+const COLORS_GRADO = ['#1565C0','#1976D2','#1E88E5','#2196F3','#42A5F5','#64B5F6','#90CAF9','#BBDEFB'];
+const COLORS_MEDIA = ['#1B5E20','#2E7D32','#388E3C','#43A047'];
+
+function makeChart(id, type, labels, datasets, opts={}) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  return new Chart(ctx, {
+    type,
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: opts.legend || false, position:'bottom', labels:{font:{size:11},boxWidth:12,padding:12} },
+        tooltip: { callbacks: { label: ctx => ' '+ctx.dataset.label+': '+fmt(ctx.parsed.y) } }
+      },
+      scales: {
+        x: { grid:{color:'#F0F4F8'}, ticks:{font:{size:11}} },
+        y: { grid:{color:'#F0F4F8'}, ticks:{font:{size:11}, callback: v => fmt(v)}, ...( opts.yMin ? {min:opts.yMin} : {}) }
+      },
+      ...opts.extra
+    }
+  });
+}
+
+// Total SLEP
+makeChart('chartTotal','line',YEARS,
+  [{label:'Matrícula',data:totalData,borderColor:'#1E3A5F',backgroundColor:'rgba(30,58,95,0.08)',fill:true,tension:0.3,pointRadius:5,pointBackgroundColor:'#1E3A5F',borderWidth:2.5}],
+  {yMin:10400});
+
+// Comunas
+const comunaChartInst = makeChart('chartComunas','line',YEARS,
+  Object.entries(comunaData).map(([c,d],i)=>({label:c,data:d,borderColor:COLORS_COMUNA[i],backgroundColor:'transparent',tension:0.3,pointRadius:4,borderWidth:2})),
+  {legend:true});
+
+// Nivel
+makeChart('chartNiveles','line',YEARS,
+  Object.entries(nivelData).map(([n,d],i)=>({label:n,data:d,borderColor:COLORS_NIVEL[i],backgroundColor:'transparent',tension:0.3,pointRadius:3,borderWidth:1.8})),
+  {legend:true});
+
+// Rural/Urbano
+makeChart('chartRural','bar',YEARS,
+  [{label:'Rural',data:ruralData.Rural,backgroundColor:'#E65100',borderRadius:3},
+   {label:'Urbano',data:ruralData.Urbano,backgroundColor:'#2C5282',borderRadius:3}],
+  {legend:true, extra:{scales:{x:{stacked:false},y:{stacked:false,grid:{color:'#F0F4F8'},ticks:{font:{size:11},callback:v=>fmt(v)}}}}});
+
+// Grado Básica
+makeChart('chartGradoBasica','line',YEARS,
+  Object.entries(gradoBasica).map(([g,d],i)=>({label:g+' Básico',data:d,borderColor:COLORS_GRADO[i],backgroundColor:'transparent',tension:0.3,pointRadius:g==='1°'?5:3,borderWidth:g==='1°'?3:1.5})),
+  {legend:true});
+
+// Grado Media
+makeChart('chartGradoMedia','line',YEARS,
+  Object.entries(gradoMedia).map(([g,d],i)=>({label:g,data:d,borderColor:COLORS_MEDIA[i],backgroundColor:'transparent',tension:0.3,pointRadius:4,borderWidth:2})),
+  {legend:true});
+
+// ===== COMUNA CHIPS =====
+const chipContainer = document.getElementById('comunaChips');
+let activeCom = null;
+Object.entries(comunaData).forEach(([c,d],i) => {
+  const chip = document.createElement('button');
+  chip.className='chip';
+  chip.style.borderColor=COLORS_COMUNA[i];
+  chip.style.color=COLORS_COMUNA[i];
+  chip.innerHTML=c+' <span style="font-weight:400;opacity:.8">('+fmt(d[5])+')</span>';
+  chip.onclick = () => {
+    if(activeCom===c){activeCom=null;chip.style.background='#fff';chip.style.color=COLORS_COMUNA[i];document.getElementById('comunaDetail').classList.remove('active');}
+    else {
+      document.querySelectorAll('.chip').forEach((ch,ci)=>{ch.style.background='#fff';ch.style.color=COLORS_COMUNA[ci];});
+      chip.style.background=COLORS_COMUNA[i];chip.style.color='#fff';
+      activeCom=c;
+      showComunaDetail(c);
+    }
+  };
+  chipContainer.appendChild(chip);
+});
+
+function showComunaDetail(c) {
+  const panel = document.getElementById('comunaDetail');
+  document.getElementById('comunaDetailTitle').textContent='Variación por nivel en '+c+' (2021 → 2026)';
+  const cards = document.getElementById('comunaDetailCards');
+  cards.innerHTML='';
+  const data = nivelComuna[c];
+  if(!data) return;
+  Object.entries(data).forEach(([niv,v])=>{
+    const diff=v[1]-v[0];
+    const card=document.createElement('div');card.className='nivel-card';
+    card.innerHTML='<div class="nivel-card-label">'+niv+'</div><div class="nivel-card-vals">'+fmt(v[0])+' → '+fmt(v[1])+'</div>'+badge(diff);
+    cards.appendChild(card);
+  });
+  panel.classList.add('active');
+}
+
+// ===== ESTABLECIMIENTOS TABLE =====
+let sortKey='v2126', sortDir=1, expandedRbd=null;
+const enriched = establecimientos.map(e=>{
+  const m=e.mat;
+  return {...e,v2126:m[5]-m[0],v2526:m[5]-m[4],peak:Math.max(...m),peakYr:YEARS[m.indexOf(Math.max(...m))],active:m[5]>0};
+});
+
+// KPIs
+(function(){
+  const active=enriched.filter(e=>e.active).length;
+  const conBaja=enriched.filter(e=>e.active&&e.v2126<0).length;
+  const conAlza=enriched.filter(e=>e.active&&e.v2126>0).length;
+  const cerrados=enriched.filter(e=>!e.active&&e.mat[0]>0).length;
+  const kpis=[
+    {l:'Activos 2026',v:active,s:'de '+enriched.length+' totales',c:'#1E3A5F'},
+    {l:'Con baja 21→26',v:conBaja,s:'establecimientos',c:'#C62828'},
+    {l:'Con alza 21→26',v:conAlza,s:'establecimientos',c:'#2E7D32'},
+    {l:'Cerrados en período',v:cerrados,s:'Matrícula 0 en 2026',c:'#E65100'},
+  ];
+  document.getElementById('estKpis').innerHTML=kpis.map(k=>'<div class="kpi"><div class="kpi-label">'+k.l+'</div><div class="kpi-value" style="color:'+k.c+'">'+k.v+'</div><div class="kpi-sub">'+k.s+'</div></div>').join('');
+})();
+
+function sortTable(key) {
+  if(sortKey===key) sortDir*=-1; else {sortKey=key;sortDir=1;}
+  document.querySelectorAll('th span[id]').forEach(s=>s.textContent='');
+  const el=document.getElementById('s-'+key);
+  if(el) el.textContent=sortDir===1?' ↑':' ↓';
+  renderTable();
+}
+
+function renderTable() {
+  const search=document.getElementById('searchInput').value.toLowerCase();
+  const filterCom=document.getElementById('filterCom').value;
+  const filterZona=document.getElementById('filterZona').value;
+  let rows=[...enriched];
+  if(filterCom) rows=rows.filter(e=>e.com===filterCom);
+  if(filterZona) rows=rows.filter(e=>e.zona.startsWith(filterZona));
+  if(search) rows=rows.filter(e=>e.nom.toLowerCase().includes(search)||String(e.rbd).includes(search));
+  rows.sort((a,b)=>{
+    let va,vb;
+    if(sortKey==='nom'){return sortDir*(a.nom.localeCompare(b.nom));}
+    if(sortKey==='com'){return sortDir*(a.com.localeCompare(b.com));}
+    if(sortKey==='zona'){return sortDir*(a.zona.localeCompare(b.zona));}
+    if(sortKey==='mat26'){va=a.mat[5];vb=b.mat[5];}
+    else if(sortKey==='v2126'){va=a.v2126;vb=b.v2126;}
+    else if(sortKey==='v2526'){va=a.v2526;vb=b.v2526;}
+    else {va=a.mat[5];vb=b.mat[5];}
+    return sortDir*(va-vb);
+  });
+  document.getElementById('filterCount').textContent=rows.length+' establecimientos';
+  const tbody=document.getElementById('estTbody');
+  tbody.innerHTML='';
+  rows.forEach(e=>{
+    const isExp=expandedRbd===e.rbd;
+    const tr=document.createElement('tr');
+    if(isExp) tr.className='expanded';
+    tr.innerHTML=
+      '<td><div class="est-name">'+e.nom+'</div><div class="est-rbd">RBD '+e.rbd+'</div></td>'+
+      '<td style="font-size:11px;text-align:center">'+e.com+'</td>'+
+      '<td style="text-align:center"><span class="zona-badge '+(e.zona.startsWith('R')?'zona-r':'zona-u')+'">'+e.zona+'</span></td>'+
+      '<td style="text-align:center;font-weight:700">'+(e.mat[5]===0?'<span style="color:#9E9E9E">—</span>':fmt(e.mat[5]))+'</td>'+
+      '<td style="text-align:center">'+sparkSVG(e.mat)+'</td>'+
+      '<td style="text-align:center">'+badge(e.v2126)+'</td>'+
+      '<td style="text-align:center">'+badge(e.v2526)+'</td>'+
+      '<td style="text-align:center;font-size:10px;color:#718096">'+fmt(e.peak)+'<br>('+e.peakYr+')</td>';
+    tr.style.cursor='pointer';
+    tr.onclick=()=>{expandedRbd=isExp?null:e.rbd;renderTable();};
+    tbody.appendChild(tr);
+    if(isExp) {
+      const dtr=document.createElement('tr');dtr.className='detail-row';
+      const td=document.createElement('td');td.colSpan=8;
+      let html='<div class="detail-years">';
+      YEARS.forEach((y,yi)=>{
+        const varHtml=yi>0?'<div class="detail-year-var" style="color:'+(e.mat[yi]>=e.mat[yi-1]?'#2E7D32':'#C62828')+'">'+(e.mat[yi]-e.mat[yi-1]>0?'+':'')+fmt(e.mat[yi]-e.mat[yi-1])+'</div>':'<div style="height:14px"></div>';
+        html+='<div class="detail-year"><div class="detail-year-label">'+y+'</div><div class="detail-year-val" style="color:'+(e.mat[yi]===0?'#9E9E9E':'#2D3748')+'">'+fmt(e.mat[yi])+'</div>'+varHtml+'</div>';
+      });
+      html+='</div>';
+      td.innerHTML=html;dtr.appendChild(td);tbody.appendChild(dtr);
+    }
+  });
+}
+renderTable();
+document.getElementById('s-v2126').textContent=' ↑';
+
+// ===== TABS =====
+function switchView(v) {
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
